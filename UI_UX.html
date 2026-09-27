@@ -1,0 +1,1811 @@
+<!doctype html>
+<html lang="en" class="dark scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>AERO HUD v4 — Mobile & Desktop Automotive Telematics Cockpit</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" href="kisspng-air-conditioner-inverter-5b205b7fc58425.721303751528847231809.jpg" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              cyber: {
+                bg: "#07090e",
+                card: "#0f141c",
+                border: "#1e293b",
+                accent: "var(--accent-color, #06b6d4)",
+                accentGlow: "var(--accent-glow, rgba(6, 182, 212, 0.4))",
+              },
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              hud: ["Rajdhani", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      :root {
+        --accent-color: #06b6d4;
+        --accent-glow: rgba(6, 182, 212, 0.35);
+        --accent-secondary: #3b82f6;
+      }
+
+      /* Prevent unwanted horizontal bounce or overflow on mobile devices */
+      html,
+      body {
+        overflow-x: hidden;
+        width: 100%;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        background-color: #07090e;
+        color: #f1f5f9;
+      }
+
+      /* Neon Glow Utility */
+      .neon-border {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 15px var(--accent-glow);
+      }
+      .neon-text {
+        color: var(--accent-color);
+        text-shadow: 0 0 10px var(--accent-glow);
+      }
+      .neon-bg {
+        background-color: var(--accent-color);
+        box-shadow: 0 0 20px var(--accent-glow);
+      }
+
+      /* Glassmorphism elements */
+      .glass-panel {
+        background: rgba(15, 20, 28, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .glass-panel-interactive {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .glass-panel-interactive:hover {
+        border-color: var(--accent-color);
+        box-shadow: 0 4px 20px -2px var(--accent-glow);
+      }
+
+      /* Touch & Tap Button Tweaks */
+      .touch-pedal {
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: none;
+      }
+      .touch-pedal:active {
+        transform: scale(0.96);
+      }
+
+      /* Disable custom hover animations on touch devices to avoid touch sticky states */
+      @media (hover: none) and (pointer: coarse) {
+        .hover-elevation:hover {
+          transform: none !important;
+        }
+      }
+
+      /* Smooth Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #07090e;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1e293b;
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-color);
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans antialiased text-slate-100 bg-[#07090e] min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black"
+  >
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+      >
+        <!-- Brand Logo -->
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-9 h-9 rounded-lg neon-bg flex items-center justify-center text-slate-950 font-hud font-bold text-xl tracking-wider"
+          >
+            A4
+          </div>
+          <div>
+            <span
+              class="font-hud font-bold text-lg sm:text-xl tracking-wider text-white"
+              >AERO HUD</span
+            >
+            <span
+              class="text-xs font-mono ml-1.5 px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800/50"
+              >v4.0 MOBILE</span
+            >
+          </div>
+        </div>
+
+        <!-- Desktop Nav Links -->
+        <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
+          <a
+            href="#hero"
+            class="text-slate-300 hover:text-white transition-colors"
+            >Overview</a
+          >
+          <a
+            href="#research"
+            class="text-slate-300 hover:text-white transition-colors"
+            >UX Research</a
+          >
+          <a
+            href="#design-system"
+            class="text-slate-300 hover:text-white transition-colors"
+            >Design System</a
+          >
+          <a
+            href="#wireframes"
+            class="text-slate-300 hover:text-white transition-colors"
+            >Wireframes</a
+          >
+          <a
+            href="#simulator"
+            class="px-3 py-1.5 rounded-lg neon-border text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/40 transition-colors font-hud font-semibold"
+          >
+            Live Telematics Sim
+          </a>
+        </nav>
+
+        <!-- Top Right Action Controls -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Audio Mute Switch -->
+          <button
+            id="audioToggleBtn"
+            title="Toggle V8 Sound FX"
+            class="w-10 h-10 rounded-lg glass-panel flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:border-cyan-500/50 transition-all"
+          >
+            <svg
+              id="soundOnIcon"
+              class="w-5 h-5 hidden"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+              />
+            </svg>
+            <svg
+              id="soundOffIcon"
+              class="w-5 h-5 text-slate-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+              />
+            </svg>
+          </button>
+
+          <!-- Mobile Hamburger Button -->
+          <button
+            id="mobileMenuBtn"
+            class="md:hidden w-10 h-10 rounded-lg glass-panel flex items-center justify-center text-slate-200 focus:outline-none"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Nav Drawer Overlay -->
+      <div
+        id="mobileDrawer"
+        class="hidden md:hidden glass-panel border-t border-slate-800 px-4 pt-3 pb-6 space-y-3 transition-all duration-300"
+      >
+        <a
+          href="#hero"
+          class="mobile-nav-link block py-2.5 px-3 rounded-lg hover:bg-slate-800/60 font-medium text-slate-200"
+          >Overview</a
+        >
+        <a
+          href="#research"
+          class="mobile-nav-link block py-2.5 px-3 rounded-lg hover:bg-slate-800/60 font-medium text-slate-200"
+          >UX Research & Personas</a
+        >
+        <a
+          href="#design-system"
+          class="mobile-nav-link block py-2.5 px-3 rounded-lg hover:bg-slate-800/60 font-medium text-slate-200"
+          >Design System & Tokens</a
+        >
+        <a
+          href="#wireframes"
+          class="mobile-nav-link block py-2.5 px-3 rounded-lg hover:bg-slate-800/60 font-medium text-slate-200"
+          >Wireframe HUD Comparison</a
+        >
+        <a
+          href="#simulator"
+          class="mobile-nav-link block py-3 px-3 rounded-lg bg-cyan-950/60 border border-cyan-800 text-cyan-300 font-hud font-bold text-center"
+        >
+          🚀 OPEN COCKPIT SIMULATOR
+        </a>
+      </div>
+    </header>
+
+    <main class="flex-grow">
+      <!-- HERO SECTION -->
+      <section
+        id="hero"
+        class="relative py-12 sm:py-20 overflow-hidden border-b border-slate-800/60"
+      >
+        <!-- Background Glow Orbs -->
+        <div
+          class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"
+        ></div>
+        <div
+          class="absolute bottom-10 right-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"
+        ></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div class="text-center max-w-3xl mx-auto">
+            <div
+              class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-800/80 text-cyan-400 text-xs font-mono mb-4"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"
+              ></span>
+              <span>MOBILE OPTIMIZED COCKPIT INTERFACE</span>
+            </div>
+
+            <h1
+              class="font-hud font-bold text-4xl sm:text-6xl lg:text-7xl tracking-tight text-white mb-6 leading-none"
+            >
+              NEXT-GEN <span class="neon-text">TELEMATICS</span> HUD
+            </h1>
+
+            <p
+              class="text-slate-400 text-base sm:text-lg mb-8 leading-relaxed px-2"
+            >
+              A responsive, high-framerate automotive heads-up display &
+              telemetry dashboard tailored for high-speed track environments and
+              daily EV commuting.
+            </p>
+
+            <div
+              class="flex flex-col sm:flex-row items-center justify-center gap-4"
+            >
+              <a
+                href="#simulator"
+                class="w-full sm:w-auto px-8 py-4 rounded-xl neon-bg text-slate-950 font-hud font-bold text-lg hover:opacity-90 transition-all text-center"
+              >
+                Launch Cockpit Sim
+              </a>
+              <a
+                href="#research"
+                class="w-full sm:w-auto px-8 py-4 rounded-xl glass-panel text-slate-200 font-hud font-semibold text-lg hover:border-slate-600 transition-all text-center"
+              >
+                Explore Case Study
+              </a>
+            </div>
+          </div>
+
+          <!-- Quick Metrics Grid -->
+          <div
+            class="mt-12 sm:mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4"
+          >
+            <div class="glass-panel p-4 rounded-xl text-center">
+              <div class="text-xs text-slate-400 font-mono mb-1">LATENCY</div>
+              <div class="text-xl sm:text-2xl font-hud font-bold text-cyan-400">
+                &lt; 12ms
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Real-time CAN-bus parsing
+              </div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl text-center">
+              <div class="text-xs text-slate-400 font-mono mb-1">
+                TARGET FPS
+              </div>
+              <div
+                class="text-xl sm:text-2xl font-hud font-bold text-emerald-400"
+              >
+                60 - 120 FPS
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Hardware accelerated HTML5 Canvas
+              </div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl text-center">
+              <div class="text-xs text-slate-400 font-mono mb-1">TOUCH LAG</div>
+              <div
+                class="text-xl sm:text-2xl font-hud font-bold text-amber-400"
+              >
+                0ms Input
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Pointer & Touch events
+              </div>
+            </div>
+            <div class="glass-panel p-4 rounded-xl text-center">
+              <div class="text-xs text-slate-400 font-mono mb-1">
+                SAFETY SCORE
+              </div>
+              <div class="text-xl sm:text-2xl font-hud font-bold text-blue-400">
+                99.4%
+              </div>
+              <div class="text-[10px] text-slate-500">
+                Glance duration &lt; 0.4s
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- UX RESEARCH SECTION -->
+      <section
+        id="research"
+        class="py-12 sm:py-20 border-b border-slate-800/60"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="mb-10 text-center sm:text-left">
+            <h2 class="font-hud font-bold text-3xl sm:text-4xl text-white mb-2">
+              01. UX RESEARCH & PERSONAS
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base">
+              Solving cognitive overload during high-speed performance driving.
+            </p>
+          </div>
+
+          <!-- Problem vs Solution Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div
+              class="glass-panel p-6 rounded-2xl border-l-4 border-l-red-500"
+            >
+              <div class="flex items-center space-x-3 mb-3">
+                <span
+                  class="p-2 rounded-lg bg-red-950/60 text-red-400 font-mono text-xs"
+                  >PROBLEM</span
+                >
+                <h3 class="font-hud font-bold text-xl text-white">
+                  Visual Clutter & Driver Distraction
+                </h3>
+              </div>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                Legacy digital dashboards stuff screens with redundant nested
+                menus, tiny numbers, and distracting skeuomorphic dials. Driver
+                eye-gaze duration away from the track increases safety hazards.
+              </p>
+            </div>
+
+            <div
+              class="glass-panel p-6 rounded-2xl border-l-4 border-l-cyan-500"
+            >
+              <div class="flex items-center space-x-3 mb-3">
+                <span
+                  class="p-2 rounded-lg bg-cyan-950/60 text-cyan-400 font-mono text-xs"
+                  >SOLUTION</span
+                >
+                <h3 class="font-hud font-bold text-xl text-white">
+                  Adaptive Focal Telematics
+                </h3>
+              </div>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                AERO HUD dynamically changes color temperature, visual weight,
+                and readout density based on active drive modes. Critical
+                telemetry (speed, G-forces, RPM redline) is highlighted only
+                when relevant.
+              </p>
+            </div>
+          </div>
+
+          <!-- Personas Grid -->
+          <h3 class="font-hud font-bold text-2xl text-white mb-6">
+            Target User Personas
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Persona 1 -->
+            <div
+              class="glass-panel p-5 rounded-2xl flex flex-col justify-between"
+            >
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <div
+                    class="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/50 flex items-center justify-center font-hud font-bold text-amber-400 text-lg"
+                  >
+                    AP
+                  </div>
+                  <span
+                    class="px-2.5 py-1 rounded-full text-xs font-mono bg-amber-950 text-amber-300 border border-amber-800/50"
+                    >Track Enthusiast</span
+                  >
+                </div>
+                <h4 class="font-hud font-bold text-lg text-white">
+                  Alex Petrov
+                </h4>
+                <p class="text-xs text-slate-400 mb-3">
+                  34 • Porsche GT3 & Custom EV Driver
+                </p>
+                <p class="text-slate-300 text-xs leading-relaxed italic mb-4">
+                  "I need instantaneous visual feedback on G-force vectors and
+                  shift cues without taking my eyes off the apex."
+                </p>
+              </div>
+              <div class="space-y-2 border-t border-slate-800 pt-3">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Key Need:</span>
+                  <span class="text-amber-400 font-medium"
+                    >G-Force & Apex Speed</span
+                  >
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Pain Point:</span>
+                  <span class="text-slate-300">Tiny text on stock HUDs</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Persona 2 -->
+            <div
+              class="glass-panel p-5 rounded-2xl flex flex-col justify-between"
+            >
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <div
+                    class="w-12 h-12 rounded-full bg-cyan-500/20 border border-cyan-500/50 flex items-center justify-center font-hud font-bold text-cyan-400 text-lg"
+                  >
+                    EV
+                  </div>
+                  <span
+                    class="px-2.5 py-1 rounded-full text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800/50"
+                    >Daily Commuter</span
+                  >
+                </div>
+                <h4 class="font-hud font-bold text-lg text-white">
+                  Elena Vance
+                </h4>
+                <p class="text-xs text-slate-400 mb-3">
+                  29 • Performance EV Owner
+                </p>
+                <p class="text-slate-300 text-xs leading-relaxed italic mb-4">
+                  "During rush hour, I want smooth ambient energy regeneration
+                  indicators and crisp navigation prompts."
+                </p>
+              </div>
+              <div class="space-y-2 border-t border-slate-800 pt-3">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Key Need:</span>
+                  <span class="text-cyan-400 font-medium"
+                    >Eco Efficiency & Battery Status</span
+                  >
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Pain Point:</span>
+                  <span class="text-slate-300">Glare on sunny days</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Persona 3 -->
+            <div
+              class="glass-panel p-5 rounded-2xl flex flex-col justify-between"
+            >
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <div
+                    class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center font-hud font-bold text-emerald-400 text-lg"
+                  >
+                    FM
+                  </div>
+                  <span
+                    class="px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-950 text-emerald-300 border border-emerald-800/50"
+                    >Fleet Engineer</span
+                  >
+                </div>
+                <h4 class="font-hud font-bold text-lg text-white">
+                  Marcus Vance
+                </h4>
+                <p class="text-xs text-slate-400 mb-3">42 • Telemetry Lead</p>
+                <p class="text-slate-300 text-xs leading-relaxed italic mb-4">
+                  "Standardized mobile telemetry streaming and diagnostic
+                  metrics allow us to evaluate powertrain wear."
+                </p>
+              </div>
+              <div class="space-y-2 border-t border-slate-800 pt-3">
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Key Need:</span>
+                  <span class="text-emerald-400 font-medium"
+                    >CAN-Bus Diagnostics</span
+                  >
+                </div>
+                <div class="flex justify-between text-xs">
+                  <span class="text-slate-400">Pain Point:</span>
+                  <span class="text-slate-300"
+                    >Unresponsive mobile portals</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- USER JOURNEY MAP -->
+      <section
+        class="py-12 sm:py-16 border-b border-slate-800/60 bg-slate-950/40"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h3 class="font-hud font-bold text-2xl text-white mb-6">
+            User Journey Map: High-Speed Track Lap
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div
+              class="glass-panel p-4 rounded-xl border-t-2 border-t-cyan-500"
+            >
+              <div class="text-xs font-mono text-cyan-400 mb-1">STAGE 1</div>
+              <h4 class="font-hud font-bold text-base text-white mb-2">
+                Paddock Setup
+              </h4>
+              <p class="text-slate-400 text-xs leading-relaxed">
+                Driver selects TRACK or DRIFT mode. Cockpit lighting matches
+                vehicle drive mode. Audio synth calibrates.
+              </p>
+            </div>
+            <div
+              class="glass-panel p-4 rounded-xl border-t-2 border-t-amber-500"
+            >
+              <div class="text-xs font-mono text-amber-400 mb-1">STAGE 2</div>
+              <h4 class="font-hud font-bold text-base text-white mb-2">
+                Launch Sprint
+              </h4>
+              <p class="text-slate-400 text-xs leading-relaxed">
+                Launch Control triggers. High-visibility shift lights flash when
+                approaching 8,000 RPM redline.
+              </p>
+            </div>
+            <div class="glass-panel p-4 rounded-xl border-t-2 border-t-red-500">
+              <div class="text-xs font-mono text-red-400 mb-1">STAGE 3</div>
+              <h4 class="font-hud font-bold text-base text-white mb-2">
+                Corner Apex
+              </h4>
+              <p class="text-slate-400 text-xs leading-relaxed">
+                Lateral G-force vector expands on HUD. Glances under 0.3s
+                confirm vehicle balance and tire traction limits.
+              </p>
+            </div>
+            <div
+              class="glass-panel p-4 rounded-xl border-t-2 border-t-emerald-500"
+            >
+              <div class="text-xs font-mono text-emerald-400 mb-1">STAGE 4</div>
+              <h4 class="font-hud font-bold text-base text-white mb-2">
+                Telemetry Review
+              </h4>
+              <p class="text-slate-400 text-xs leading-relaxed">
+                Post-lap data automatically logs top speed, 0-100 km/h
+                acceleration times, and battery thermals.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DESIGN SYSTEM & TOKENS -->
+      <section
+        id="design-system"
+        class="py-12 sm:py-20 border-b border-slate-800/60"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="mb-10 text-center sm:text-left">
+            <h2 class="font-hud font-bold text-3xl sm:text-4xl text-white mb-2">
+              02. DESIGN SYSTEM & TOKENS
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base">
+              Tap any color swatch to copy token value to clipboard.
+            </p>
+          </div>
+
+          <!-- Color Swatches Grid -->
+          <div
+            class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-12"
+          >
+            <div
+              onclick="copyToken('#10b981', 'Emerald Eco')"
+              class="glass-panel p-4 rounded-xl cursor-pointer hover:border-emerald-500 transition-all group"
+            >
+              <div
+                class="h-16 rounded-lg bg-emerald-500 mb-3 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform"
+              ></div>
+              <div class="font-hud font-bold text-sm text-white">
+                Eco Emerald
+              </div>
+              <div class="text-xs font-mono text-slate-400">#10b981</div>
+            </div>
+            <div
+              onclick="copyToken('#06b6d4', 'Cyan Comfort')"
+              class="glass-panel p-4 rounded-xl cursor-pointer hover:border-cyan-500 transition-all group"
+            >
+              <div
+                class="h-16 rounded-lg bg-cyan-500 mb-3 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
+              ></div>
+              <div class="font-hud font-bold text-sm text-white">
+                Cyan Comfort
+              </div>
+              <div class="text-xs font-mono text-slate-400">#06b6d4</div>
+            </div>
+            <div
+              onclick="copyToken('#f59e0b', 'Amber Sport')"
+              class="glass-panel p-4 rounded-xl cursor-pointer hover:border-amber-500 transition-all group"
+            >
+              <div
+                class="h-16 rounded-lg bg-amber-500 mb-3 shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform"
+              ></div>
+              <div class="font-hud font-bold text-sm text-white">
+                Amber Sport
+              </div>
+              <div class="text-xs font-mono text-slate-400">#f59e0b</div>
+            </div>
+            <div
+              onclick="copyToken('#ef4444', 'Crimson Track')"
+              class="glass-panel p-4 rounded-xl cursor-pointer hover:border-red-500 transition-all group"
+            >
+              <div
+                class="h-16 rounded-lg bg-red-500 mb-3 shadow-lg shadow-red-500/20 group-hover:scale-105 transition-transform"
+              ></div>
+              <div class="font-hud font-bold text-sm text-white">
+                Crimson Track
+              </div>
+              <div class="text-xs font-mono text-slate-400">#ef4444</div>
+            </div>
+            <div
+              onclick="copyToken('#a855f7', 'Violet Drift')"
+              class="glass-panel p-4 rounded-xl cursor-pointer hover:border-purple-500 transition-all group"
+            >
+              <div
+                class="h-16 rounded-lg bg-purple-500 mb-3 shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform"
+              ></div>
+              <div class="font-hud font-bold text-sm text-white">
+                Violet Drift
+              </div>
+              <div class="text-xs font-mono text-slate-400">#a855f7</div>
+            </div>
+          </div>
+
+          <!-- Dynamic Typography Tester -->
+          <div class="glass-panel p-6 rounded-2xl">
+            <div
+              class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4"
+            >
+              <div>
+                <h3 class="font-hud font-bold text-xl text-white">
+                  Dynamic Typography Scale Tester
+                </h3>
+                <p class="text-xs text-slate-400">
+                  Adjust HUD display font sizing dynamically
+                </p>
+              </div>
+              <div class="flex items-center space-x-3 w-full sm:w-auto">
+                <span class="text-xs font-mono text-slate-400">Size:</span>
+                <input
+                  id="fontSizeSlider"
+                  type="range"
+                  min="16"
+                  max="48"
+                  value="28"
+                  class="w-full sm:w-32 accent-cyan-400"
+                />
+                <span
+                  id="fontSizeLabel"
+                  class="text-xs font-mono text-cyan-400 w-8"
+                  >28px</span
+                >
+              </div>
+            </div>
+
+            <div
+              class="p-6 rounded-xl bg-slate-950/80 border border-slate-800 overflow-hidden"
+            >
+              <div
+                id="typeSample"
+                class="font-hud font-bold text-cyan-400 tracking-wider transition-all duration-150 leading-tight"
+              >
+                248 KM/H — GEAR 6
+              </div>
+              <div class="mt-2 text-xs font-mono text-slate-500">
+                Rajdhani Bold / High-Contrast HUD Readout
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WIREFRAMES VS HI-FI COMPARISON -->
+      <section
+        id="wireframes"
+        class="py-12 sm:py-20 border-b border-slate-800/60"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div
+            class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4"
+          >
+            <div>
+              <h2
+                class="font-hud font-bold text-3xl sm:text-4xl text-white mb-2"
+              >
+                03. WIREFRAME VS HI-FI HUD
+              </h2>
+              <p class="text-slate-400 text-sm sm:text-base">
+                Drag the touch handle to compare low-fidelity architecture with
+                glowing Hi-Fi renders.
+              </p>
+            </div>
+            <button
+              id="toggleHeatmapBtn"
+              class="px-4 py-2 rounded-lg glass-panel text-xs font-mono text-slate-300 hover:text-cyan-400 hover:border-cyan-500 transition-all flex items-center space-x-2 self-start md:self-auto"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-red-500 animate-pulse"
+              ></span>
+              <span id="heatmapBtnText">Toggle Eye-Tracking Heatmap</span>
+            </button>
+          </div>
+
+          <!-- Draggable Comparison Container -->
+          <div
+            id="comparisonContainer"
+            class="relative w-full h-[320px] sm:h-[450px] rounded-2xl overflow-hidden border border-slate-800 select-none touch-none"
+          >
+            <!-- Hi-Fi Layer (Background) -->
+            <div
+              class="absolute inset-0 bg-slate-950 flex flex-col justify-between p-6 sm:p-10"
+            >
+              <div class="flex justify-between items-start">
+                <div>
+                  <span
+                    class="px-2.5 py-1 rounded bg-cyan-950 text-cyan-400 text-xs font-mono border border-cyan-800"
+                    >HI-FI CYBER HUD</span
+                  >
+                  <h3
+                    class="font-hud font-bold text-2xl sm:text-3xl text-white mt-2"
+                  >
+                    Active Telematics Layout
+                  </h3>
+                </div>
+                <div class="text-right">
+                  <div
+                    class="font-hud font-bold text-3xl sm:text-4xl text-cyan-400 neon-text"
+                  >
+                    214
+                  </div>
+                  <div class="text-[10px] font-mono text-slate-400">
+                    KM/H DIGITAL SPEED
+                  </div>
+                </div>
+              </div>
+
+              <!-- Simulated Hi-Fi Gauge Preview -->
+              <div class="grid grid-cols-3 gap-3 sm:gap-6 my-auto">
+                <div
+                  class="p-4 rounded-xl glass-panel border-cyan-500/40 text-center"
+                >
+                  <div class="text-[10px] text-slate-400 font-mono">
+                    LATERAL G
+                  </div>
+                  <div class="text-xl font-hud font-bold text-cyan-400">
+                    1.28 G
+                  </div>
+                </div>
+                <div
+                  class="p-4 rounded-xl glass-panel border-cyan-500/40 text-center"
+                >
+                  <div class="text-[10px] text-slate-400 font-mono">
+                    RPM REDLINE
+                  </div>
+                  <div class="text-xl font-hud font-bold text-amber-400">
+                    7,200
+                  </div>
+                </div>
+                <div
+                  class="p-4 rounded-xl glass-panel border-cyan-500/40 text-center"
+                >
+                  <div class="text-[10px] text-slate-400 font-mono">
+                    BOOST PSI
+                  </div>
+                  <div class="text-xl font-hud font-bold text-emerald-400">
+                    18.4
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="flex justify-between items-center text-xs font-mono text-slate-400 border-t border-slate-800 pt-3"
+              >
+                <span>MODE: SPORT +</span>
+                <span>BATTERY: 88%</span>
+              </div>
+            </div>
+
+            <!-- Lo-Fi Layer (Clipped Foreground) -->
+            <div
+              id="lofiLayer"
+              class="absolute inset-y-0 left-0 w-1/2 bg-slate-900 border-r-2 border-cyan-400 overflow-hidden z-10"
+            >
+              <div
+                class="w-[1000px] sm:w-[1200px] h-full p-6 sm:p-10 flex flex-col justify-between font-mono text-slate-400 text-xs"
+              >
+                <div class="flex justify-between items-start">
+                  <div>
+                    <span
+                      class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700"
+                      >LO-FI WIREFRAME</span
+                    >
+                    <h3
+                      class="font-hud font-bold text-2xl sm:text-3xl text-slate-300 mt-2"
+                    >
+                      Structural Blueprint
+                    </h3>
+                  </div>
+                  <div class="text-right">
+                    <div
+                      class="border border-dashed border-slate-600 p-2 text-xl"
+                    >
+                      [SPEED_VAL]
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 sm:gap-6 my-auto">
+                  <div
+                    class="p-4 rounded border border-dashed border-slate-600 text-center"
+                  >
+                    [G_FORCE]
+                  </div>
+                  <div
+                    class="p-4 rounded border border-dashed border-slate-600 text-center"
+                  >
+                    [TACH_RPM]
+                  </div>
+                  <div
+                    class="p-4 rounded border border-dashed border-slate-600 text-center"
+                  >
+                    [PSI_VAL]
+                  </div>
+                </div>
+
+                <div
+                  class="flex justify-between items-center border-t border-slate-800 pt-3"
+                >
+                  <span>[MODE_INDICATOR]</span>
+                  <span>[SOC_LEVEL]</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Eye Tracking Heatmap Canvas Overlay -->
+            <canvas
+              id="heatmapCanvas"
+              class="absolute inset-0 z-20 pointer-events-none opacity-0 transition-opacity duration-300"
+            ></canvas>
+
+            <!-- Draggable Slider Divider Handle -->
+            <div
+              id="sliderHandle"
+              class="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-8 z-30 flex items-center justify-center cursor-ew-resize"
+            >
+              <div
+                class="w-1 h-full bg-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+              ></div>
+              <div
+                class="absolute w-8 h-8 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center shadow-lg font-bold text-xs"
+              >
+                ↔
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIVE COCKPIT TELEMATICS SIMULATOR -->
+      <section
+        id="simulator"
+        class="py-12 sm:py-20 bg-slate-950/80 border-b border-slate-800/60"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-8">
+            <span
+              class="px-3 py-1 rounded-full bg-cyan-950 text-cyan-400 text-xs font-mono border border-cyan-800"
+            >
+              INTERACTIVE VEHICLE HUD SIMULATOR
+            </span>
+            <h2 class="font-hud font-bold text-3xl sm:text-5xl text-white mt-3">
+              AERO HUD v4 TELEMATICS COCKPIT
+            </h2>
+            <p
+              class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto mt-2"
+            >
+              Use the touch pedals or keyboard spacebar to accelerate.
+              Experience dynamic theme switching, engine audio synthesis, and
+              real-time telemetry rendering.
+            </p>
+          </div>
+
+          <!-- DRIVE MODE SELECTOR TABS -->
+          <div class="flex flex-wrap items-center justify-center gap-2 mb-8">
+            <button
+              onclick="setDriveMode('ECO')"
+              id="modeBtnECO"
+              class="mode-btn px-4 py-2 rounded-xl glass-panel text-xs sm:text-sm font-hud font-bold transition-all text-slate-400 hover:text-white"
+            >
+              🌱 ECO
+            </button>
+            <button
+              onclick="setDriveMode('COMFORT')"
+              id="modeBtnCOMFORT"
+              class="mode-btn px-4 py-2 rounded-xl glass-panel text-xs sm:text-sm font-hud font-bold transition-all text-slate-400 hover:text-white"
+            >
+              💧 COMFORT
+            </button>
+            <button
+              onclick="setDriveMode('SPORT')"
+              id="modeBtnSPORT"
+              class="mode-btn px-4 py-2 rounded-xl glass-panel text-xs sm:text-sm font-hud font-bold transition-all text-slate-400 hover:text-white"
+            >
+              ⚡ SPORT
+            </button>
+            <button
+              onclick="setDriveMode('TRACK')"
+              id="modeBtnTRACK"
+              class="mode-btn px-4 py-2 rounded-xl glass-panel text-xs sm:text-sm font-hud font-bold transition-all text-slate-400 hover:text-white"
+            >
+              🔥 TRACK
+            </button>
+            <button
+              onclick="setDriveMode('DRIFT')"
+              id="modeBtnDRIFT"
+              class="mode-btn px-4 py-2 rounded-xl glass-panel text-xs sm:text-sm font-hud font-bold transition-all text-slate-400 hover:text-white"
+            >
+              🌀 DRIFT
+            </button>
+          </div>
+
+          <!-- MAIN SIMULATOR COCKPIT DISPLAY -->
+          <div
+            class="glass-panel rounded-3xl p-4 sm:p-8 border border-slate-800 relative overflow-hidden"
+          >
+            <!-- Top Telemetry Status Header -->
+            <div
+              class="flex flex-wrap items-center justify-between border-b border-slate-800/80 pb-4 mb-6 gap-3"
+            >
+              <div class="flex items-center space-x-3">
+                <div
+                  class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"
+                ></div>
+                <span class="font-mono text-xs text-slate-300"
+                  >CAN-BUS ACTIVE</span
+                >
+                <span
+                  id="currentModeBadge"
+                  class="px-2.5 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800"
+                >
+                  MODE: COMFORT
+                </span>
+              </div>
+              <div
+                class="flex items-center space-x-4 text-xs font-mono text-slate-400"
+              >
+                <div>
+                  GEAR:
+                  <span
+                    id="gearDisplay"
+                    class="font-hud font-bold text-lg text-white"
+                    >N</span
+                  >
+                </div>
+                <div>BATTERY: <span class="text-emerald-400">92%</span></div>
+                <div>TEMP: <span class="text-slate-200">38°C</span></div>
+              </div>
+            </div>
+
+            <!-- Gauges & Telemetry Visualizer Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <!-- Left Panel: G-Force Vector Canvas -->
+              <div
+                class="lg:col-span-4 glass-panel p-4 rounded-2xl flex flex-col items-center"
+              >
+                <div class="w-full flex justify-between items-center mb-2">
+                  <span class="text-xs font-mono text-slate-400"
+                    >G-FORCE VECTOR</span
+                  >
+                  <span
+                    id="gForceReadout"
+                    class="text-xs font-mono font-bold text-cyan-400"
+                    >0.00 G</span
+                  >
+                </div>
+                <div class="relative w-full aspect-square max-w-[260px]">
+                  <canvas
+                    id="gForceCanvas"
+                    class="w-full h-full block"
+                  ></canvas>
+                </div>
+              </div>
+
+              <!-- Center Panel: Primary Dynamic Speedometer Gauge -->
+              <div
+                class="lg:col-span-4 glass-panel p-6 rounded-2xl flex flex-col items-center justify-center relative"
+              >
+                <div class="w-full max-w-[300px] aspect-square relative">
+                  <canvas
+                    id="speedoCanvas"
+                    class="w-full h-full block"
+                  ></canvas>
+                </div>
+              </div>
+
+              <!-- Right Panel: Live Telemetry Line Chart Canvas -->
+              <div
+                class="lg:col-span-4 glass-panel p-4 rounded-2xl flex flex-col"
+              >
+                <div class="w-full flex justify-between items-center mb-2">
+                  <span class="text-xs font-mono text-slate-400"
+                    >REAL-TIME TELEMETRY</span
+                  >
+                  <span class="text-[10px] font-mono text-slate-500"
+                    >SPEED vs RPM</span
+                  >
+                </div>
+                <div class="w-full h-[200px] relative">
+                  <canvas
+                    id="telemetryChartCanvas"
+                    class="w-full h-full block"
+                  ></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- SIMULATOR DRIVING CONTROLS -->
+            <div
+              class="mt-8 pt-6 border-t border-slate-800/80 grid grid-cols-1 md:grid-cols-3 gap-6 items-center"
+            >
+              <!-- Launch Control Benchmark Widget -->
+              <div
+                class="glass-panel p-4 rounded-2xl flex items-center justify-between"
+              >
+                <div>
+                  <div class="text-[10px] font-mono text-slate-400">
+                    LAUNCH CONTROL BENCHMARK
+                  </div>
+                  <div class="text-xs text-slate-300 mt-0.5">
+                    0-100 KM/H TIMER
+                  </div>
+                  <div
+                    id="launchTimerDisplay"
+                    class="font-hud font-bold text-2xl text-amber-400 mt-1"
+                  >
+                    0.00 s
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="text-[10px] font-mono text-slate-500">
+                    BEST RECORD
+                  </div>
+                  <div
+                    id="bestRecordDisplay"
+                    class="font-hud font-bold text-sm text-emerald-400"
+                  >
+                    2.84 s
+                  </div>
+                </div>
+              </div>
+
+              <!-- Touch Pedal Controls (Optimized for Mobile Thumbs) -->
+              <div
+                class="md:col-span-2 flex items-center justify-center gap-4 sm:gap-6"
+              >
+                <!-- BRAKE PEDAL -->
+                <button
+                  id="brakeBtn"
+                  class="touch-pedal flex-1 h-20 sm:h-24 rounded-2xl bg-gradient-to-b from-red-950/80 to-red-900/40 border-2 border-red-600/60 flex flex-col items-center justify-center text-red-300 active:bg-red-800 transition-all shadow-lg shadow-red-950/50"
+                >
+                  <span
+                    class="font-hud font-bold text-xl sm:text-2xl tracking-wider"
+                    >BRAKE</span
+                  >
+                  <span class="text-[10px] font-mono text-red-400/80"
+                    >HOLD / TAP</span
+                  >
+                </button>
+
+                <!-- GAS ACCELERATOR PEDAL -->
+                <button
+                  id="gasBtn"
+                  class="touch-pedal flex-2 h-20 sm:h-24 rounded-2xl bg-gradient-to-b from-cyan-950/90 to-cyan-800/50 border-2 border-cyan-400 flex flex-col items-center justify-center text-cyan-200 active:bg-cyan-700 transition-all shadow-lg shadow-cyan-950/50 px-6"
+                >
+                  <span
+                    class="font-hud font-bold text-2xl sm:text-3xl tracking-wider neon-text"
+                    >GAS PEDAL</span
+                  >
+                  <span class="text-[10px] font-mono text-cyan-300/80"
+                    >HOLD TO ACCELERATE</span
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="glass-panel border-t border-slate-800 py-8">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-7 h-7 rounded neon-bg flex items-center justify-center text-slate-950 font-hud font-bold text-sm"
+          >
+            A4
+          </div>
+          <span class="text-xs font-mono text-slate-400"
+            >AERO HUD v4.0 Mobile Case Study & Prototype</span
+          >
+        </div>
+        <div class="text-xs font-mono text-slate-500 text-center sm:text-right">
+          Designed for Ultra-Low Latency Vehicle Displays • 2026 Edition
+        </div>
+      </div>
+    </footer>
+
+    <!-- Toast Notification Popup -->
+    <div
+      id="toast"
+      class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 glass-panel border border-cyan-500/50 px-4 py-3 rounded-xl flex items-center space-x-3 shadow-2xl pointer-events-none"
+    >
+      <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+      <span id="toastMsg" class="text-xs font-mono text-slate-200"
+        >Action performed</span
+      >
+    </div>
+
+    <!-- JAVASCRIPT LOGIC & ENGINE SYNTHESIZER -->
+    <script>
+      // Global State Variables
+      let currentMode = "COMFORT";
+      let currentSpeed = 0; // km/h
+      let targetSpeed = 0;
+      let currentRPM = 1000;
+      let currentGear = 1;
+      let isGasPressed = false;
+      let isBrakePressed = false;
+      let audioMuted = true;
+      let heatmapActive = false;
+
+      // Drive Mode Presets Configuration
+      const driveModes = {
+        ECO: {
+          name: "ECO",
+          accent: "#10b981",
+          glow: "rgba(16, 185, 129, 0.4)",
+          maxSpeed: 140,
+          accel: 0.8,
+          topG: 0.7,
+        },
+        COMFORT: {
+          name: "COMFORT",
+          accent: "#06b6d4",
+          glow: "rgba(6, 182, 212, 0.4)",
+          maxSpeed: 180,
+          accel: 1.2,
+          topG: 1.0,
+        },
+        SPORT: {
+          name: "SPORT",
+          accent: "#f59e0b",
+          glow: "rgba(245, 158, 11, 0.4)",
+          maxSpeed: 240,
+          accel: 2.0,
+          topG: 1.4,
+        },
+        TRACK: {
+          name: "TRACK",
+          accent: "#ef4444",
+          glow: "rgba(239, 68, 68, 0.4)",
+          maxSpeed: 320,
+          accel: 3.2,
+          topG: 1.8,
+        },
+        DRIFT: {
+          name: "DRIFT",
+          accent: "#a855f7",
+          glow: "rgba(168, 85, 247, 0.4)",
+          maxSpeed: 260,
+          accel: 2.8,
+          topG: 2.2,
+        },
+      };
+
+      // Telemetry History for Chart Rendering
+      const telemetryHistory = Array(50).fill(0);
+
+      // Launch Control Timer Tracking
+      let launchTimer = 0;
+      let isLaunching = false;
+      let launchStartTime = 0;
+      let bestRecord = 2.84;
+
+      // Web Audio API Sound Synthesizer
+      let audioCtx = null;
+      let oscMain = null;
+      let oscSub = null;
+      let gainNode = null;
+
+      function initAudioEngine() {
+        if (audioCtx) return;
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+
+          oscMain = audioCtx.createOscillator();
+          oscSub = audioCtx.createOscillator();
+          gainNode = audioCtx.createGain();
+
+          oscMain.type = "sawtooth";
+          oscSub.type = "triangle";
+
+          oscMain.frequency.value = 60;
+          oscSub.frequency.value = 30;
+
+          gainNode.gain.value = 0; // Starts silent
+
+          oscMain.connect(gainNode);
+          oscSub.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+
+          oscMain.start();
+          oscSub.start();
+        } catch (e) {
+          console.warn("Web Audio API not supported on this browser");
+        }
+      }
+
+      function updateAudioPitch(rpm) {
+        if (!audioCtx || audioMuted) return;
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+        const freq = 50 + (rpm / 8000) * 350;
+        oscMain.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.05);
+        oscSub.frequency.setTargetAtTime(
+          freq * 0.5,
+          audioCtx.currentTime,
+          0.05,
+        );
+
+        const targetGain = isGasPressed ? 0.15 : 0.03;
+        gainNode.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.05);
+      }
+
+      // Helper: Canvas Resolution HDPI Rescaling
+      function setupHDPICanvas(canvas) {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+        return { ctx, width: rect.width, height: rect.height };
+      }
+
+      // SPEEDOMETER GAUGE RENDERER
+      function renderSpeedometer() {
+        const canvas = document.getElementById("speedoCanvas");
+        if (!canvas) return;
+        const { ctx, width, height } = setupHDPICanvas(canvas);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const radius = Math.min(width, height) * 0.38;
+
+        ctx.clearRect(0, 0, width, height);
+
+        const modeConfig = driveModes[currentMode];
+        const startAngle = 0.75 * Math.PI;
+        const endAngle = 2.25 * Math.PI;
+
+        // Background Outer Track Arc
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.lineWidth = 12;
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineCap = "round";
+        ctx.stroke();
+
+        // Dynamic Active Speed Arc
+        const speedRatio = Math.min(currentSpeed / modeConfig.maxSpeed, 1.0);
+        const currentAngle = startAngle + speedRatio * (endAngle - startAngle);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, startAngle, currentAngle);
+        ctx.lineWidth = 12;
+        ctx.strokeStyle = modeConfig.accent;
+        ctx.lineCap = "round";
+        ctx.shadowColor = modeConfig.accent;
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+        ctx.shadowBlur = 0; // reset shadow
+
+        // Tachometer RPM Inner Radial Dots
+        const dotCount = 20;
+        const innerRadius = radius - 20;
+        const rpmRatio = currentRPM / 8000;
+
+        for (let i = 0; i <= dotCount; i++) {
+          const angle = startAngle + (i / dotCount) * (endAngle - startAngle);
+          const x = centerX + Math.cos(angle) * innerRadius;
+          const y = centerY + Math.sin(angle) * innerRadius;
+
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, 2 * Math.PI);
+          if (i / dotCount <= rpmRatio) {
+            ctx.fillStyle = i / dotCount > 0.85 ? "#ef4444" : modeConfig.accent;
+          } else {
+            ctx.fillStyle = "#334155";
+          }
+          ctx.fill();
+        }
+
+        // Digital Speed Readout Text
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "700 48px Rajdhani";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(Math.round(currentSpeed), centerX, centerY - 8);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "600 12px JetBrains Mono";
+        ctx.fillText("KM/H", centerX, centerY + 28);
+      }
+
+      // G-FORCE VECTOR CANVA RENDERER
+      function renderGForce() {
+        const canvas = document.getElementById("gForceCanvas");
+        if (!canvas) return;
+        const { ctx, width, height } = setupHDPICanvas(canvas);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxRadius = Math.min(width, height) * 0.4;
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Concentric Metric Rings
+        const modeConfig = driveModes[currentMode];
+        [0.33, 0.66, 1.0].forEach((ratio) => {
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, maxRadius * ratio, 0, 2 * Math.PI);
+          ctx.strokeStyle = "#1e293b";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        });
+
+        // Crosshair Axes
+        ctx.beginPath();
+        ctx.moveTo(centerX - maxRadius, centerY);
+        ctx.lineTo(centerX + maxRadius, centerY);
+        ctx.moveTo(centerX, centerY - maxRadius);
+        ctx.lineTo(centerX, centerY + maxRadius);
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Calculate Dynamic G-Force Coordinates based on Throttle & Speed
+        const targetG = isGasPressed
+          ? (currentSpeed / 100) * 0.8
+          : isBrakePressed
+            ? -1.2
+            : 0;
+        const gX =
+          centerX + Math.sin(Date.now() / 200) * targetG * (maxRadius / 2);
+        const gY = centerY - targetG * (maxRadius / 2);
+
+        // Plot G-Force Vector Dot with Glow
+        ctx.beginPath();
+        ctx.arc(gX, gY, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = modeConfig.accent;
+        ctx.shadowColor = modeConfig.accent;
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Update G-Force Metric Text Output
+        const currentGVal = Math.abs(targetG).toFixed(2);
+        document.getElementById("gForceReadout").innerText = `${currentGVal} G`;
+      }
+
+      // TELEMETRY LINE CHART RENDERER
+      function renderTelemetryChart() {
+        const canvas = document.getElementById("telemetryChartCanvas");
+        if (!canvas) return;
+        const { ctx, width, height } = setupHDPICanvas(canvas);
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Update Telemetry Array History
+        telemetryHistory.push(currentSpeed);
+        if (telemetryHistory.length > 50) telemetryHistory.shift();
+
+        const modeConfig = driveModes[currentMode];
+        const maxVal = modeConfig.maxSpeed;
+        const stepX = width / (telemetryHistory.length - 1);
+
+        // Draw Background Gridlines
+        ctx.strokeStyle = "#1e293b";
+        ctx.lineWidth = 1;
+        for (let y = 0; y <= height; y += height / 4) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+
+        // Draw Telemetry Spline
+        ctx.beginPath();
+        telemetryHistory.forEach((val, idx) => {
+          const x = idx * stepX;
+          const y = height - (val / maxVal) * (height - 20) - 10;
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+
+        ctx.strokeStyle = modeConfig.accent;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = modeConfig.accent;
+        ctx.shadowBlur = 8;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      // EYE TRACKING HEATMAP OVERLAY RENDERER
+      function renderHeatmap() {
+        const canvas = document.getElementById("heatmapCanvas");
+        if (!canvas) return;
+        const { ctx, width, height } = setupHDPICanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+
+        if (!heatmapActive) return;
+
+        // Simulated Focal Point Density Hotspots
+        const hotspots = [
+          { x: width * 0.8, y: height * 0.2, radius: 70, intensity: 0.8 }, // Speedometer
+          { x: width * 0.2, y: height * 0.5, radius: 50, intensity: 0.6 }, // G-Force
+        ];
+
+        hotspots.forEach((spot) => {
+          const grad = ctx.createRadialGradient(
+            spot.x,
+            spot.y,
+            0,
+            spot.x,
+            spot.y,
+            spot.radius,
+          );
+          grad.addColorStop(0, `rgba(239, 68, 68, ${spot.intensity})`);
+          grad.addColorStop(0.5, `rgba(245, 158, 11, ${spot.intensity * 0.5})`);
+          grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(spot.x, spot.y, spot.radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      // VEHICLE PHYSICS ENGINE LOOP
+      function updatePhysics() {
+        const modeConfig = driveModes[currentMode];
+
+        if (isGasPressed) {
+          targetSpeed = Math.min(
+            targetSpeed + modeConfig.accel,
+            modeConfig.maxSpeed,
+          );
+        } else if (isBrakePressed) {
+          targetSpeed = Math.max(targetSpeed - modeConfig.accel * 2.5, 0);
+        } else {
+          targetSpeed = Math.max(targetSpeed - 0.4, 0); // Natural coasting drag
+        }
+
+        // Smooth Interpolation
+        currentSpeed += (targetSpeed - currentSpeed) * 0.1;
+
+        // RPM Calculation & Gear Shifts
+        currentRPM =
+          1000 + (currentSpeed % 50) * 120 + (isGasPressed ? 1500 : 0);
+        currentGear = Math.min(Math.floor(currentSpeed / 40) + 1, 7);
+        document.getElementById("gearDisplay").innerText =
+          currentSpeed > 0 ? currentGear : "N";
+
+        // Launch Control Timer Logic
+        if (isGasPressed && currentSpeed > 0 && currentSpeed < 100) {
+          if (!isLaunching) {
+            isLaunching = true;
+            launchStartTime = performance.now();
+          }
+          launchTimer = ((performance.now() - launchStartTime) / 1000).toFixed(
+            2,
+          );
+          document.getElementById("launchTimerDisplay").innerText =
+            `${launchTimer} s`;
+        } else if (currentSpeed >= 100 && isLaunching) {
+          isLaunching = false;
+          if (parseFloat(launchTimer) < bestRecord) {
+            bestRecord = parseFloat(launchTimer);
+            document.getElementById("bestRecordDisplay").innerText =
+              `${bestRecord.toFixed(2)} s`;
+            showToast(`🔥 New 0-100 Record: ${bestRecord}s!`);
+          }
+        } else if (currentSpeed === 0) {
+          isLaunching = false;
+        }
+
+        // Audio Pitch Update
+        updateAudioPitch(currentRPM);
+
+        // Trigger Canvas Renders
+        renderSpeedometer();
+        renderGForce();
+        renderTelemetryChart();
+
+        requestAnimationFrame(updatePhysics);
+      }
+
+      // Drive Mode Switcher Function
+      function setDriveMode(modeKey) {
+        if (!driveModes[modeKey]) return;
+        currentMode = modeKey;
+        const config = driveModes[modeKey];
+
+        // Update Root CSS variables for Dynamic Neon Glow
+        document.documentElement.style.setProperty(
+          "--accent-color",
+          config.accent,
+        );
+        document.documentElement.style.setProperty(
+          "--accent-glow",
+          config.glow,
+        );
+
+        // Update Mode Tabs Styling
+        document.querySelectorAll(".mode-btn").forEach((btn) => {
+          btn.classList.remove("neon-border", "text-white");
+          btn.classList.add("text-slate-400");
+        });
+        const activeBtn = document.getElementById(`modeBtn${modeKey}`);
+        if (activeBtn) {
+          activeBtn.classList.add("neon-border", "text-white");
+        }
+
+        // Update Badge Text
+        document.getElementById("currentModeBadge").innerText =
+          `MODE: ${config.name}`;
+        showToast(`Drive Mode Switched to ${config.name}`);
+      }
+
+      // Toast Notification Helper
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        document.getElementById("toastMsg").innerText = msg;
+        toast.classList.remove("translate-y-20", "opacity-0");
+        setTimeout(() => {
+          toast.classList.add("translate-y-20", "opacity-0");
+        }, 2500);
+      }
+
+      // Copy Color Token Swatch Helper
+      function copyToken(hex, name) {
+        const dummy = document.createElement("textarea");
+        document.body.appendChild(dummy);
+        dummy.value = hex;
+        dummy.select();
+        document.execCommand("copy");
+        document.body.removeChild(dummy);
+        showToast(`Copied ${name} (${hex})`);
+      }
+
+      // WIREFRAME COMPARISON SLIDER TOUCH/POINTER EVENTS
+      function setupComparisonSlider() {
+        const container = document.getElementById("comparisonContainer");
+        const lofiLayer = document.getElementById("lofiLayer");
+        const handle = document.getElementById("sliderHandle");
+        let isDragging = false;
+
+        function updateSlider(clientX) {
+          const rect = container.getBoundingClientRect();
+          let x = clientX - rect.left;
+          x = Math.max(0, Math.min(x, rect.width));
+          const percentage = (x / rect.width) * 100;
+          lofiLayer.style.width = `${percentage}%`;
+          handle.style.left = `${percentage}%`;
+        }
+
+        container.addEventListener("pointerdown", (e) => {
+          isDragging = true;
+          updateSlider(e.clientX);
+        });
+
+        window.addEventListener("pointermove", (e) => {
+          if (isDragging) updateSlider(e.clientX);
+        });
+
+        window.addEventListener("pointerup", () => (isDragging = false));
+      }
+
+      // EVENT LISTENERS & INITIALIZATION
+      window.addEventListener("DOMContentLoaded", () => {
+        // Setup Drive Mode Default
+        setDriveMode("COMFORT");
+
+        // Wireframe Slider Setup
+        setupComparisonSlider();
+
+        // Mobile Menu Toggle
+        const mobileBtn = document.getElementById("mobileMenuBtn");
+        const mobileDrawer = document.getElementById("mobileDrawer");
+        mobileBtn.addEventListener("click", () => {
+          mobileDrawer.classList.toggle("hidden");
+        });
+
+        // Close Mobile Nav when link is tapped
+        document.querySelectorAll(".mobile-nav-link").forEach((link) => {
+          link.addEventListener("click", () =>
+            mobileDrawer.classList.add("hidden"),
+          );
+        });
+
+        // Audio Mute Toggle
+        const audioBtn = document.getElementById("audioToggleBtn");
+        const soundOnIcon = document.getElementById("soundOnIcon");
+        const soundOffIcon = document.getElementById("soundOffIcon");
+        audioBtn.addEventListener("click", () => {
+          initAudioEngine();
+          audioMuted = !audioMuted;
+          if (audioMuted) {
+            soundOnIcon.classList.add("hidden");
+            soundOffIcon.classList.remove("hidden");
+            showToast("V8 Audio Synthesizer Muted");
+          } else {
+            soundOffIcon.classList.add("hidden");
+            soundOnIcon.classList.remove("hidden");
+            showToast("V8 Engine Sound Activated 🔊");
+          }
+        });
+
+        // Heatmap Toggle
+        const heatmapBtn = document.getElementById("toggleHeatmapBtn");
+        const heatmapCanvas = document.getElementById("heatmapCanvas");
+        heatmapBtn.addEventListener("click", () => {
+          heatmapActive = !heatmapActive;
+          heatmapCanvas.style.opacity = heatmapActive ? "1" : "0";
+          renderHeatmap();
+          showToast(
+            heatmapActive
+              ? "Heatmap Overlay Activated"
+              : "Heatmap Overlay Disabled",
+          );
+        });
+
+        // Dynamic Typography Tester Slider
+        const typeSlider = document.getElementById("fontSizeSlider");
+        const typeLabel = document.getElementById("fontSizeLabel");
+        const typeSample = document.getElementById("typeSample");
+        typeSlider.addEventListener("input", (e) => {
+          const val = e.target.value;
+          typeLabel.innerText = `${val}px`;
+          typeSample.style.fontSize = `${val}px`;
+        });
+
+        // Touch / Keyboard Gas & Brake Controls
+        const gasBtn = document.getElementById("gasBtn");
+        const brakeBtn = document.getElementById("brakeBtn");
+
+        const startGas = (e) => {
+          if (e.cancelable) e.preventDefault();
+          initAudioEngine();
+          isGasPressed = true;
+        };
+        const stopGas = (e) => {
+          if (e.cancelable) e.preventDefault();
+          isGasPressed = false;
+        };
+
+        const startBrake = (e) => {
+          if (e.cancelable) e.preventDefault();
+          isBrakePressed = true;
+        };
+        const stopBrake = (e) => {
+          if (e.cancelable) e.preventDefault();
+          isBrakePressed = false;
+        };
+
+        // Touch & Mouse Handlers for Gas
+        gasBtn.addEventListener("touchstart", startGas, { passive: false });
+        gasBtn.addEventListener("touchend", stopGas, { passive: false });
+        gasBtn.addEventListener("mousedown", startGas);
+        gasBtn.addEventListener("mouseup", stopGas);
+        gasBtn.addEventListener("mouseleave", stopGas);
+
+        // Touch & Mouse Handlers for Brake
+        brakeBtn.addEventListener("touchstart", startBrake, { passive: false });
+        brakeBtn.addEventListener("touchend", stopBrake, { passive: false });
+        brakeBtn.addEventListener("mousedown", startBrake);
+        brakeBtn.addEventListener("mouseup", stopBrake);
+        brakeBtn.addEventListener("mouseleave", stopBrake);
+
+        // Keyboard Spacebar / Arrow Accelerate
+        window.addEventListener("keydown", (e) => {
+          if (e.code === "Space" || e.code === "ArrowUp") {
+            initAudioEngine();
+            isGasPressed = true;
+          } else if (e.code === "ArrowDown") {
+            isBrakePressed = true;
+          }
+        });
+        window.addEventListener("keyup", (e) => {
+          if (e.code === "Space" || e.code === "ArrowUp") isGasPressed = false;
+          if (e.code === "ArrowDown") isBrakePressed = false;
+        });
+
+        // Handle Resize HDPI scaling smoothly
+        window.addEventListener("resize", () => {
+          renderSpeedometer();
+          renderGForce();
+          renderTelemetryChart();
+          if (heatmapActive) renderHeatmap();
+        });
+
+        // Kick off main vehicle physics loop
+        requestAnimationFrame(updatePhysics);
+      });
+    </script>
+  </body>
+</html>
